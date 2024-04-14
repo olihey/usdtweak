@@ -1,81 +1,95 @@
 #pragma once
-
+#include <unordered_map>
+#include <string>
 #include <pxr/usd/sdf/path.h>
 #include <pxr/usd/usd/stage.h>
 #include <pxr/usd/usdGeom/camera.h>
 
 PXR_NAMESPACE_USING_DIRECTIVE
-
-// Manage and store the cameras used in the viewport.
-// They can be stage cameras or usdtweak owned cameras
 //
-// It should probably also list the new cameras
-// the list of cameras available in the viewport (need a stage)
-// Keep a track of which camera is selected for each stage
-// Return the selected camera for rendering
-// Set the new selected camera
-// Having its internal cams:Persp/Top/Bottom as static so they can be shared
+// Manage and store the cameras owned by a viewport.
+// A cameras can be a stage camera or an internal viewport camera.
+// Only perspective iternal camera is implemented as of now.
 //
-// TODO have camera per stage
+// This class also provide a UI to select the current camera.
 //
 class ViewportCameras {
 public:
-    ViewportCameras() : _selectedCameraPath(perspectiveCameraPath), _renderCamera(&_perspectiveCamera) {}
+    ViewportCameras();
 
-    // The update is called at every rendered frame, it applies the changes done to this structure
+    // The update function is called before every rendered frame.
+    // This updates the internals of this structure following the changes that
+    // happened between the previous frame and now
     void Update(const UsdStageRefPtr &stage, UsdTimeCode tc);
     
+    // Change the camera aspect ratio
     void SetCameraAspectRatio(int width, int height);
     
-    // UI
+    //
+    // UI helpers
+    //
     void DrawCameraList(const UsdStageRefPtr &stage);
     void DrawCameraEditor(const UsdStageRefPtr &stage, UsdTimeCode tc);
     
     // Accessors
-    std::string GetCurrentCameraName() {return _selectedCameraPath.GetName();}
+    std::string GetCurrentCameraName() const;
     
     // Returning an editable camera which can be modified externaly by manipulators or any functions,
     // in the viewport. This will likely be reset at each frame. This is not thread safe and should be used only
     // in the main render loop.
     GfCamera & GetEditableCamera() { return *_renderCamera; }
-    // GetSelectedGfCamera()
+    
+    // Same as above but const
     const GfCamera & GetCurrentCamera() const { return *_renderCamera; }
        
     //
     const SdfPath & GetStageCameraPath() const ;
 
-
-    // TODO CurrentIsPerspectiveCamera()
-    // IsUsingPerpectiveCamera()
-    // SelectedCameraIsPerspective()
-    inline bool IsPerspective() const { return _selectedCameraPath == perspectiveCameraPath; }
-    
+    // Used in the manipulators for editing stage
     // TODO IsEditingStageCamera()
     inline bool IsUsingStageCamera () const {
-        return _renderCamera != &_perspectiveCamera;
+        return _currentConfig->_renderCameraType == StageCamera;
     }
-
+    
 private:
+    inline bool IsPerspective() const { return _currentConfig->_renderCameraType == ViewportPerspective;}
+   
+    // Set a new Stage camera path
+    void UseStageCamera(const UsdStageRefPtr &stage, const SdfPath &cameraPath);
     
-    // Stage camera path
-    void SetStageAndCameraPath(const UsdStageRefPtr &stage, const SdfPath &cameraPath);
+    // Set the viewport camera
+    void UseViewportPerspCamera(const UsdStageRefPtr &stage);
+
+    // Points to a valid camera, stage or perspective that we share with the rest of the application
+    GfCamera *_renderCamera;
+    // Points to the current persp camera belonging to the stage
+    GfCamera *_perspCamera;
+    // A copy of the current stage camera used for editing
+    GfCamera _stageCamera;
+    // Keep track of the current stage to know when the stage has changed
+    UsdStageRefPtr _currentStage;
     
-    SdfPath _selectedCameraPath;
-    GfCamera *_renderCamera;    // Points to a valid camera, stage or perspective
-    GfCamera _stageCamera;      // A copy of the current stage camera for editing
-
-    // TODO: if we want to have multiple viewport, the persp camera shouldn't belong to the viewport but
-    // another shared object, CameraList or similar
-    // We could also have a "universe camera" common to all stage and viewports
-    GfCamera _perspectiveCamera; // opengl this could be static, shared with all the viewports ??
-
-
-    //
-    static SdfPath perspectiveCameraPath;
-    // TODO replace SdfPath by enum {Perspective, Top, Bottom, Left, Right};
     
-    // Stage selected camera
-    // no stage -> selected camera (ut camera)
-    // stage -> selected camera (stage camera or ut camera)
+    // Common to all stages, the perpective and ortho cams
+    struct OwnedCameras {
+        GfCamera _perspectiveCamera;
+        // TODO Ortho cameras
+    };
+    
+    
+    // Internal viewport cameras
+    static std::unordered_map<std::string, OwnedCameras> _viewportCamerasPerStage;
+
+    enum CameraType {ViewportPerspective, StageCamera};
+    struct CameraConfiguration {
+        SdfPath _stageCameraPath = SdfPath::EmptyPath();
+        // we keep track of the render camera type
+        CameraType _renderCameraType = CameraType::ViewportPerspective;
+    };
+    // Per viewport we want to select particular camera
+    // We want to keep the camera configuration per stage on each viewport
+    std::unordered_map<std::string, CameraConfiguration> _perStageConfiguration;
+    
+    CameraConfiguration *_currentConfig = nullptr;
 
 };

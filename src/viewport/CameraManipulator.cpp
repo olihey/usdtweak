@@ -14,7 +14,7 @@ void CameraManipulator::OnBeginEdition(Viewport &viewport) {
 }
 
 void CameraManipulator::OnEndEdition(Viewport &viewport) {
-    if (_stageCamera) {
+    if (viewport.IsEditingStageCamera() && _stageCamera) {
         EndEdition();
     }
 }
@@ -38,7 +38,7 @@ Manipulator *CameraManipulator::OnUpdate(Viewport &viewport) {
     auto &currentCamera = viewport.GetEditableCamera();
 
     if (Move(currentCamera, io.MouseDelta.x, io.MouseDelta.y)) {
-        if (_stageCamera) {
+        if (viewport.IsEditingStageCamera() && _stageCamera) {
             // This is going to fill the undo/redo buffer :S
             _stageCamera.SetFromCamera(currentCamera, viewport.GetCurrentTimeCode());
         }

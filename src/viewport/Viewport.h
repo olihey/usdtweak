@@ -31,13 +31,13 @@ class Viewport final {
     Viewport(const Viewport &) = delete;
     Viewport &operator=(const Viewport &) = delete;
 
-    /// Render hydra
+    /// Render hydra image on a texture
     void Render();
 
     /// Update internal data: selection, current renderer
     void Update();
 
-    /// Draw the full widget
+    /// Draw the full viewport widget
     void Draw();
 
     /// Returns the time code of this viewport
@@ -48,16 +48,21 @@ class Viewport final {
     void FrameSelection(const Selection &);
     void FrameRootPrim();
 
-    /// Return the camera structure used to render the viewport, it can be altered for reframing
+    /// Return the camera structure used to render the viewport which can be modified for reframing, movement, etc
+    /// The modification is then applied to the actual camera data, prim or internal at the followin
+    /// Update() call.
     GfCamera &GetEditableCamera();
+
+    /// Return the const camera structure used to render the viewport.
     const GfCamera &GetCurrentCamera() const;
     
     /// Returns the path of the selected stage camera or SdfPath() if the camera is internal
-    const SdfPath &GetSelectedStageCameraPath () { return _cameras.GetStageCameraPath(); }
+    inline const SdfPath &GetSelectedStageCameraPath () { return _cameras.GetStageCameraPath(); }
     
-    bool IsEditingStageCamera() const { return _cameras.IsUsingStageCamera(); }
+
+    inline bool IsEditingStageCamera() const { return _cameras.IsUsingStageCamera(); }
     
-    CameraManipulator &GetCameraManipulator() { return _cameraManipulator; }
+    inline CameraManipulator &GetCameraManipulator() { return _cameraManipulator; }
 
     // Picking
     bool TestIntersection(GfVec2d clickedPoint, SdfPath &outHitPrimPath, SdfPath &outHitInstancerPath, int &outHitInstanceIndex);
@@ -102,9 +107,6 @@ class Viewport final {
     void HandleManipulationEvents();
     void HandleKeyboardShortcut();
 
-    /// Playback controls
-    void StartPlayback();
-    void StopPlayback();
 
   private:
     // Viewport ID
@@ -114,6 +116,7 @@ class Viewport final {
     ViewportCameras _cameras;
 
     // Manipulators
+    //ManipulatorStateHandler _manipulators; // TODO one per stage or pass the stage
     Manipulator *_currentEditingState; // Manipulator currently used by the FSM
     Manipulator *_activeManipulator;   // Manipulator chosen by the user
     CameraManipulator _cameraManipulator;
@@ -142,9 +145,6 @@ class Viewport final {
     ImagingSettings _imagingSettings;
     GlfDrawTargetRefPtr _drawTarget;
 
-    // Playback controls
-    bool _playing = false;
-    std::chrono::time_point<std::chrono::steady_clock> _lastFrameTime;
 };
 
 template <> inline Manipulator *Viewport::GetManipulator<PositionManipulator>() { return &_positionManipulator; }

@@ -52,6 +52,7 @@ struct EditorSelectAttributePath;
 struct EditorShutdown;
 struct EditorStartPlayback;
 struct EditorStopPlayback;
+struct EditorTogglePlayback;
 struct EditorFindPrim;
 struct EditorExportUsdz;
 struct EditorExportFlattenedStage;
@@ -63,6 +64,11 @@ struct LayerMute;
 struct LayerUnmute;
 struct LayerTextEdit;
 struct LayerCreateOversFromPath;
+
+struct ViewportsSelectMouseOverManipulator;
+struct ViewportsSelectPositionManipulator;
+struct ViewportsSelectRotationManipulator;
+struct ViewportsSelectScaleManipulator;
 
 struct UndoCommand;
 struct RedoCommand;

@@ -85,12 +85,17 @@ public:
     void InstallCallbacks(GLFWwindow *window);
     void RemoveCallbacks(GLFWwindow *window);
 
-    /// There is only one viewport for now, but could have multiple in the future
+    /// The main viewport
     Viewport &GetViewport();
+    void SelectMouseHoverManipulator();
+    void SelectPositionManipulator();
+    void SelectRotationManipulator();
+    void SelectScaleManipulator();
 
     /// Playback controls
-    void StartPlayback() { GetViewport().StartPlayback(); };
-    void StopPlayback() { GetViewport().StopPlayback(); };
+    void StartPlayback();
+    void StopPlayback();
+    void TogglePlayback();
 
     void ShowDialogSaveLayerAs(SdfLayerHandle layerToSaveAs);
 
@@ -159,4 +164,8 @@ public:
     /// Storing the tasks created by launchers.
     std::vector<std::future<int>> _launcherTasks;
 
+    /// Playback controls
+    bool _isPlaying = false;
+    std::chrono::time_point<std::chrono::steady_clock> _lastFrameTime;
+    
 };

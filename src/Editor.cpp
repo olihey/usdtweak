@@ -37,6 +37,9 @@
 #include "Blueprints.h"
 #include "UsdHelpers.h"
 #include "Stamp.h"
+#include "ManipulatorToolbox.h"
+
+namespace clk = std::chrono;
 
 // There is a bug in the Undo/Redo when reloading certain layers, here is the post
 // that explains how to debug the issue:
@@ -531,7 +534,93 @@ Viewport & Editor::GetViewport() {
     return _viewport1;
 }
 
+void Editor::SelectMouseHoverManipulator() {
+    _viewport1.ChooseManipulator<MouseHoverManipulator>();
+#if ENABLE_MULTIPLE_VIEWPORTS
+    _viewport2.ChooseManipulator<MouseHoverManipulator>();
+    _viewport3.ChooseManipulator<MouseHoverManipulator>();
+    _viewport4.ChooseManipulator<MouseHoverManipulator>();
+#endif
+}
+
+void Editor::SelectPositionManipulator() {
+    _viewport1.ChooseManipulator<PositionManipulator>();
+#if ENABLE_MULTIPLE_VIEWPORTS
+    _viewport2.ChooseManipulator<PositionManipulator>();
+    _viewport3.ChooseManipulator<PositionManipulator>();
+    _viewport4.ChooseManipulator<PositionManipulator>();
+#endif
+}
+
+void Editor::SelectRotationManipulator() {
+    _viewport1.ChooseManipulator<RotationManipulator>();
+#if ENABLE_MULTIPLE_VIEWPORTS
+    _viewport2.ChooseManipulator<RotationManipulator>();
+    _viewport3.ChooseManipulator<RotationManipulator>();
+    _viewport4.ChooseManipulator<RotationManipulator>();
+#endif
+}
+
+void Editor::SelectScaleManipulator() {
+    _viewport1.ChooseManipulator<ScaleManipulator>();
+#if ENABLE_MULTIPLE_VIEWPORTS
+    _viewport2.ChooseManipulator<ScaleManipulator>();
+    _viewport3.ChooseManipulator<ScaleManipulator>();
+    _viewport4.ChooseManipulator<ScaleManipulator>();
+#endif
+}
+
+void Editor::StartPlayback() {
+    _isPlaying = true;
+    _lastFrameTime = clk::steady_clock::now();
+}
+
+void Editor::StopPlayback() {
+    _isPlaying = false;
+    // cast to nearest frame
+    int newFrame = int(_viewport1.GetCurrentTimeCode().GetValue());
+    _viewport1.SetCurrentTimeCode(UsdTimeCode(newFrame));
+#if ENABLE_MULTIPLE_VIEWPORTS
+    _viewport2.SetCurrentTimeCode(UsdTimeCode(newFrame));
+    _viewport3.SetCurrentTimeCode(UsdTimeCode(newFrame));
+    _viewport4.SetCurrentTimeCode(UsdTimeCode(newFrame));
+#endif
+}
+
+void Editor::TogglePlayback() {
+    if (_isPlaying) {
+        StopPlayback();
+    } else {
+        StartPlayback();
+    }
+}
+
 void Editor::HydraRender() {
+
+    if (_isPlaying) {
+        auto current = clk::steady_clock::now();
+        const auto timesCodePerSec = GetCurrentStage()->GetTimeCodesPerSecond();
+        const auto timeDifference = std::chrono::duration<double>(current - _lastFrameTime);
+        // We use viewport 1 as the reference
+        double newFrame =
+            _viewport1.GetCurrentTimeCode().GetValue() + timesCodePerSec * timeDifference.count(); // for now just increment the frame
+        if (newFrame > GetCurrentStage()->GetEndTimeCode()) {
+            newFrame = GetCurrentStage()->GetStartTimeCode();
+        } else if (newFrame < GetCurrentStage()->GetStartTimeCode()) {
+            newFrame = GetCurrentStage()->GetStartTimeCode();
+        }
+        //_imagingSettings.frame = UsdTimeCode(newFrame);
+        _viewport1.SetCurrentTimeCode(UsdTimeCode(newFrame));
+#if ENABLE_MULTIPLE_VIEWPORTS
+        _viewport2.SetCurrentTimeCode(UsdTimeCode(newFrame));
+        _viewport3.SetCurrentTimeCode(UsdTimeCode(newFrame));
+        _viewport4.SetCurrentTimeCode(UsdTimeCode(newFrame));
+#endif
+        _lastFrameTime = current;
+    }
+    
+    
+    
 #if !( __APPLE__ && PXR_VERSION < 2208)
     if (_settings._showViewport1) {
         _viewport1.Update();
@@ -780,6 +869,16 @@ void Editor::Draw() {
         ImGui::End();
     }
 #endif
+    if (_settings._showViewport1
+#if ENABLE_MULTIPLE_VIEWPORTS
+        || _settings._showViewport2
+        || _settings._showViewport3
+        || _settings._showViewport4
+#endif
+        ) {
+        DrawManipulatorToolbox(this);
+    }
+
     if (_settings._showDebugWindow) {
         TRACE_SCOPE(DebugWindowTitle);
         ImGui::Begin(DebugWindowTitle, &_settings._showDebugWindow);
@@ -865,6 +964,7 @@ void Editor::Draw() {
         DrawContentBrowser(*this);
         ImGui::End();
     }
+
     
     if (_settings._showPrimSpecEditor) {
         const ImGuiWindowFlags windowFlagsWithMenu = ImGuiWindowFlags_None | ImGuiWindowFlags_MenuBar;

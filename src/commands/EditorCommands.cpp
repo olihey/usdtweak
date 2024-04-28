@@ -273,6 +273,18 @@ struct EditorStopPlayback : public EditorCommand {
 };
 template void ExecuteAfterDraw<EditorStopPlayback>();
 
+struct EditorTogglePlayback : public EditorCommand {
+    EditorTogglePlayback() {}
+    ~EditorTogglePlayback() override {}
+    bool DoIt() override {
+        if (_editor) {
+            _editor->TogglePlayback();
+        }
+        return false;
+    }
+};
+template void ExecuteAfterDraw<EditorTogglePlayback>();
+
 // Launchers, for the moment we don't make the add/remove commands undoable, but they could be in the future
 struct EditorRunLauncher : public EditorCommand {
     EditorRunLauncher(const std::string launcherName) : _launcherName(launcherName) {}
@@ -397,3 +409,41 @@ struct EditorExportFlattenedStage : public EditorCommand {
     std::string _destination;
 };
 template void ExecuteAfterDraw<EditorExportFlattenedStage>(const std::string);
+
+struct ViewportsSelectMouseOverManipulator : public EditorCommand {
+    ViewportsSelectMouseOverManipulator() {}
+    bool DoIt() override {
+        _editor->SelectMouseHoverManipulator();
+        return false;
+    }
+};
+template void ExecuteAfterDraw<ViewportsSelectMouseOverManipulator>();
+
+
+struct ViewportsSelectPositionManipulator : public EditorCommand {
+    ViewportsSelectPositionManipulator() {}
+    bool DoIt() override {
+        _editor->SelectPositionManipulator();
+        return false;
+    }
+};
+template void ExecuteAfterDraw<ViewportsSelectPositionManipulator>();
+
+struct ViewportsSelectRotationManipulator : public EditorCommand {
+    ViewportsSelectRotationManipulator() {}
+    bool DoIt() override {
+        _editor->SelectRotationManipulator();
+        return false;
+    }
+};
+template void ExecuteAfterDraw<ViewportsSelectRotationManipulator>();
+
+
+struct ViewportsSelectScaleManipulator : public EditorCommand {
+    ViewportsSelectScaleManipulator() {}
+    bool DoIt() override {
+        _editor->SelectScaleManipulator();
+        return false;
+    }
+};
+template void ExecuteAfterDraw<ViewportsSelectScaleManipulator>();

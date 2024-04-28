@@ -64,15 +64,17 @@ void SelectionManipulator::OnDrawFrame(const Viewport &) {
 }
 
 void DrawPickMode(SelectionManipulator &manipulator) {
-    static const char *PickModeStr[3] = {ICON_FA_HAND_POINTER "      Prim  ", ICON_FA_HAND_POINTER "    Model  ", ICON_FA_HAND_POINTER " Assembly"};
+    static const char *PickModeStr[3] = {ICON_FA_HAND_POINTER "  P", ICON_FA_HAND_POINTER "  M", ICON_FA_HAND_POINTER "  A"};
+    static const char *PickModeSelec[3] = {"Prim", "Model","Assembly"};
+    ImGui::SetNextItemWidth(35); // TODO compute size for icon + letter
     if (ImGui::BeginCombo("##Pick mode", PickModeStr[int(manipulator.GetPickMode())], ImGuiComboFlags_NoArrowButton)) {
-        if (ImGui::Selectable(PickModeStr[0])) {
+        if (ImGui::Selectable(PickModeSelec[0])) {
             manipulator.SetPickMode(SelectionManipulator::PickMode::Prim);
         }
-        if (ImGui::Selectable(PickModeStr[1])) {
+        if (ImGui::Selectable(PickModeSelec[1])) {
             manipulator.SetPickMode(SelectionManipulator::PickMode::Model);
         }
-        if (ImGui::Selectable(PickModeStr[2])) {
+        if (ImGui::Selectable(PickModeSelec[2])) {
             manipulator.SetPickMode(SelectionManipulator::PickMode::Assembly);
         }
         ImGui::EndCombo();

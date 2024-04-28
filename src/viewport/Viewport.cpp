@@ -90,8 +90,7 @@ void Viewport::Draw() {
         HandleManipulationEvents();
         HandleKeyboardShortcut();
         ImGui::BeginDisabled(!bool(GetCurrentStage()));
-        DrawToolBar(cursorPos + ImVec2(120, 15));
-        DrawManipulatorToolbox(cursorPos + ImVec2(15, 15));
+        DrawToolBar(cursorPos + ImVec2(15, 15));
         ImGui::EndDisabled();
     }
 }
@@ -105,7 +104,8 @@ void Viewport::DrawToolBar(const ImVec2 widgetPosition) {
     ImGui::PushStyleColor(ImGuiCol_Button, defaultColor);
     ImGui::PushStyleColor(ImGuiCol_FrameBg, defaultColor);
     ImGuiPopupFlags flags = ImGuiPopupFlags_MouseButtonLeft;
-    
+    DrawPickMode(_selectionManipulator);
+    ImGui::SameLine();
     ImGui::Button(ICON_FA_USER_COG);
     if (_renderer && ImGui::BeginPopupContextItem(nullptr, flags)) {
         DrawRendererControls(*_renderer);
@@ -310,11 +310,9 @@ void Viewport::HandleKeyboardShortcut() {
         } else {
             ScaleManipulatorPressedOnce = true;
         }
-        if (_playing) {
-            AddShortcut<EditorStopPlayback, ImGuiKey_Space>();
-        } else {
-            AddShortcut<EditorStartPlayback, ImGuiKey_Space>();
-        }
+
+        // Playback
+        AddShortcut<EditorTogglePlayback, ImGuiKey_Space>();
     }
 }
 
@@ -485,24 +483,6 @@ void Viewport::Update() {
             //_selection =
         }
 
-        // This should be extracted in a Playback module,
-        // also the current code is not providing the exact frame rate, it doesn't take into account when the frame is
-        // displayed. This is a first implementation to get an idea of how it should interact with the rest of the application.
-        if (_playing) {
-            auto current = clk::steady_clock::now();
-            const auto timesCodePerSec = GetCurrentStage()->GetTimeCodesPerSecond();
-            const auto timeDifference = std::chrono::duration<double>(current - _lastFrameTime);
-            double newFrame =
-                _imagingSettings.frame.GetValue() + timesCodePerSec * timeDifference.count(); // for now just increment the frame
-            if (newFrame > GetCurrentStage()->GetEndTimeCode()) {
-                newFrame = GetCurrentStage()->GetStartTimeCode();
-            } else if (newFrame < GetCurrentStage()->GetStartTimeCode()) {
-                newFrame = GetCurrentStage()->GetStartTimeCode();
-            }
-            _imagingSettings.frame = UsdTimeCode(newFrame);
-            _lastFrameTime = current;
-        }
-
         // Update cameras state, this will assign the user selected camera for the current stage at
         // a particular time
         _cameras.Update(GetCurrentStage(), GetCurrentTimeCode());
@@ -547,14 +527,3 @@ bool Viewport::TestIntersection(GfVec2d clickedPoint, SdfPath &outHitPrimPath, S
             &outHitPrimPath, &outHitInstancerPath, &outHitInstanceIndex));
 }
 
-
-void Viewport::StartPlayback() {
-    _playing = true;
-    _lastFrameTime = clk::steady_clock::now();
-}
-
-void Viewport::StopPlayback() {
-    _playing = false;
-    // cast to nearest frame
-    _imagingSettings.frame = UsdTimeCode(int(_imagingSettings.frame.GetValue()));
-}

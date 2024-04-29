@@ -1,1 +1,6 @@
 /build*
+
+src/resources/glsl/GridFrag.cpp
+src/resources/glsl/GridVert.cpp
+src/resources/GlslCode.h
+src/Stamp.*

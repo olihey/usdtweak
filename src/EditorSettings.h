@@ -27,6 +27,7 @@ struct EditorSettings {
     bool _showStatusBar = true;
     bool _showLauncherBar = false;
     bool _textEditor = false;
+    bool _showLEGOSession = true;
     bool _showSdfAttributeEditor = false;
     int _mainWindowWidth;
     int _mainWindowHeight;

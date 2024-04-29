@@ -21,6 +21,7 @@
 #include "UsdPrimEditor.h"
 #include "ModalDialogs.h"
 #include "StageOutliner.h"
+#include "SessionEditor.h"
 #include "Timeline.h"
 #include "ContentBrowser.h"
 #include "SdfPrimEditor.h"
@@ -64,6 +65,8 @@ namespace clk = std::chrono;
 #define Viewport4WindowTitle "Viewport4"
 #define StatusBarWindowTitle "Status bar"
 #define LauncherBarWindowTitle "Launcher bar"
+#define LEGOSessionEditorWindowTitle "LEGOlive connector"
+
 
 // Used only in the editor, so no point adding them to ImGuiHelpers yet
 inline bool BelongToSameDockTab(ImGuiWindow *w1, ImGuiWindow *w2) {
@@ -809,6 +812,8 @@ void Editor::DrawMainMenuBar() {
 #endif
             ImGui::MenuItem(StatusBarWindowTitle, nullptr, &_settings._showStatusBar);
             ImGui::MenuItem(LauncherBarWindowTitle, nullptr, &_settings._showLauncherBar);
+            ImGui::Separator();
+            ImGui::MenuItem(LEGOSessionEditorWindowTitle, nullptr, &_settings._showLEGOSession);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Help")) {
@@ -922,6 +927,14 @@ void Editor::Draw() {
         TRACE_SCOPE(UsdStageHierarchyWindowTitle);
         ImGui::Begin(UsdStageHierarchyWindowTitle, &_settings._showOutliner, windowFlagsWithMenu);
         DrawStageOutliner(GetCurrentStage(), _selection);
+        ImGui::End();
+    }
+
+    if (_settings._showLEGOSession) {
+        const ImGuiWindowFlags windowFlagsWithMenu = ImGuiWindowFlags_None | ImGuiWindowFlags_MenuBar;
+        TRACE_SCOPE(LEGOSessionEditorWindowTitle);
+        ImGui::Begin(LEGOSessionEditorWindowTitle, &_settings._showLEGOSession, windowFlagsWithMenu);
+        DrawSessionEditor(GetCurrentStage(), _selection);
         ImGui::End();
     }
 

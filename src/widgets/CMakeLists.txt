@@ -42,6 +42,8 @@ target_sources(usdtweak PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/VtDictionaryEditor.h
     ${CMAKE_CURRENT_SOURCE_DIR}/VariantEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/VariantEditor.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/SessionEditor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/SessionEditor.h
     ${CMAKE_CURRENT_SOURCE_DIR}/TfTokenLabel.h
 )
 

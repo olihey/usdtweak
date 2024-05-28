@@ -21,7 +21,7 @@
 #include "UsdPrimEditor.h"
 #include "ModalDialogs.h"
 #include "StageOutliner.h"
-#include "SessionEditor.h"
+#include "LEGO/SessionEditor.h"
 #include "Timeline.h"
 #include "ContentBrowser.h"
 #include "SdfPrimEditor.h"
